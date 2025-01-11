@@ -15,7 +15,7 @@ const BlenderScriptWrapper: React.FC = () => {
   const adjustStartTimes = (jsonData:any, fps=24) => {
     return jsonData.map((element:any,index:number) => {
       let startInFrames = Math.floor(element.start * fps);
-      let endInframes = Math.floor(element.stop * fps);
+      const endInframes = Math.floor(element.stop * fps);
       if (startInFrames >= 40) {
         startInFrames -= 40;
       } else {
