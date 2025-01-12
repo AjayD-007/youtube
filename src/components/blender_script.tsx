@@ -31,7 +31,7 @@ const BlenderScriptGenerator: React.FC<Props> = ({
   
       // Calculate total frames based on the last stop time
       
-      const totalFrames = data[0].start - data[data.length-1].stop;
+      const totalFrames =   data[data.length-1].stop - data[0].start;
   
       return `
 import bpy
@@ -51,7 +51,7 @@ def clear_sequencer():
 def setup_timeline():
       """Initialize the timeline settings."""
       bpy.context.scene.render.fps = ${fps}
-      bpy.context.scene.frame_start = 0
+      bpy.context.scene.frame_start = ${data[0].start}
       bpy.context.scene.frame_end = ${totalFrames}
   
 def add_transform_effect(strip, start_frame, end_frame, channel):
