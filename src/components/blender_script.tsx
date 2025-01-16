@@ -66,12 +66,12 @@ def add_transform_effect(strip, start_frame, end_frame, channel):
       )
   
       # Random starting and ending positions/scales for Ken Burns effect
-      scale_start = random.uniform(1.0, 1.2)
-      scale_end = random.uniform(1.0, 1.2)
-      pos_start_x = random.uniform(-0.1, 0.1)
-      pos_start_y = random.uniform(-0.1, 0.1)
-      pos_end_x = random.uniform(-0.1, 0.1)
-      pos_end_y = random.uniform(-0.1, 0.1)
+      scale_start = random.uniform(1.0, 1.4)
+      scale_end = random.uniform(1.0, 1.4)
+      pos_start_x = random.uniform(-0.2, 0.2)
+      pos_start_y = random.uniform(-0.2, 0.2)
+      pos_end_x = random.uniform(-0.2, 0.2)
+      pos_end_y = random.uniform(-0.2, 0.2)
   
       # Set initial keyframes
       transform.scale_start_x = scale_start
