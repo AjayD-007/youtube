@@ -66,10 +66,10 @@ def add_transform_effect(strip, start_frame, end_frame, channel):
       )
   
       # Random starting and ending positions/scales for Ken Burns effect
-      scale_start = random.uniform(1.0, 1.4)
-      scale_end = random.uniform(1.0, 1.4)
-      pos_start_x = random.uniform(-0.2, 0.2)
-      pos_start_y = random.uniform(-0.2, 0.2)
+      scale_start = random.uniform(1.2, 1.6)
+      scale_end = random.uniform(1.0, 1.6)
+      pos_start_x = random.uniform(-0.3, 0.3)
+      pos_start_y = random.uniform(-0.3, 0.3)
       pos_end_x = random.uniform(-0.2, 0.2)
       pos_end_y = random.uniform(-0.2, 0.2)
   
@@ -114,9 +114,9 @@ def main():
   
       for i, timing in enumerate(image_timings):
           # Alternate between channels 2 and 3 for base images
-          base_channel = 2 if i % 2 == 0 else 3
+          base_channel = 3 if i % 2 == 0 else 4
           # Use channels 4 and 5 for transform effects
-          transform_channel = 4 if i % 2 == 0 else 5
+          transform_channel = 5 if i % 2 == 0 else 6
   
           try:
               # Add image strip at exact frame positions
