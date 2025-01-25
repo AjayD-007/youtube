@@ -1,8 +1,7 @@
 "use client";
 
-import BlenderScriptGenerator, {
-  ImageTiming,
-} from "@/components/blender_script";
+import { ImageTiming } from "@/components/blender_script";
+import BlenderScriptGenerator from "@/components/blender_script_v2";
 import React, { useState } from "react";
 
 const BlenderScriptWrapper: React.FC = () => {

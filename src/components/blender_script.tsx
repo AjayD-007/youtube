@@ -6,6 +6,7 @@ export interface ImageTiming {
   start: number;
   stop: number;
   prompt: string;
+  image_number:number;
 }
 
 interface Props {
