@@ -19,41 +19,127 @@ export default function JsonToSrtCorrector() {
     setCorrectedSegments(parsedData.segments);
   };
 
-  // Process original text and align with JSON segments
+  // Process corrections with segment-by-segment matching
   const processCorrections = () => {
     if (!originalText || !jsonData?.segments) return;
 
-    const originalWords = originalText.toLowerCase().split(/\s+/);
-    let originalIndex = 0;
+    // Remove extra whitespace and split into words
+    const cleanedOriginalText = originalText
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    let currentTextIndex = 0;
     const newSegments = [];
     const changes = [];
 
     for (const segment of jsonData.segments) {
-      const segmentText = segment.text;
-      const diff = diffWords(segmentText, originalText.slice(originalIndex));
-      let correctedText = '';
+      // Find the best match for the current segment in the original text
+      const remainingText = cleanedOriginalText.slice(currentTextIndex);
+      
+      // Try to find a close match for the segment
+      const closestMatch = findBestMatch(
+        segment.text.trim(), 
+        remainingText
+      );
 
-      for (const part of diff) {
-        if (part.added) {
-          // Track additions from original text
-          correctedText += part.value;
+      if (closestMatch) {
+        // Track changes
+        if (closestMatch.original !== segment.text.trim()) {
           changes.push({
             id: segment.id,
-            original: part.removed || '',
-            corrected: part.value,
+            original: segment.text.trim(),
+            corrected: closestMatch.original
           });
-        } else if (!part.removed) {
-          correctedText += part.value;
-        }
-      }
 
-      // Update segment with corrections
-      newSegments.push({ ...segment, text: correctedText.trim() });
-      originalIndex += correctedText.length;
+          // Update the segment with the corrected text
+          newSegments.push({
+            ...segment,
+            text: closestMatch.original
+          });
+
+          // Move the text index forward
+          currentTextIndex += closestMatch.startIndex + closestMatch.original.length;
+        } else {
+          // No change needed
+          newSegments.push(segment);
+          currentTextIndex += closestMatch.startIndex + segment.text.trim().length;
+        }
+      } else {
+        // If no match found, keep original segment
+        newSegments.push(segment);
+      }
     }
 
     setChangeHistory(changes);
     setCorrectedSegments(newSegments);
+  };
+
+  // Find best match for a segment in the remaining text
+  const findBestMatch = (segmentText: string, remainingText: string) => {
+    // Remove leading/trailing whitespace and convert to lowercase for matching
+    const cleanSegment = segmentText.trim().toLowerCase();
+    const cleanRemaining = remainingText.toLowerCase();
+
+    // Try exact match first
+    const exactMatchIndex = cleanRemaining.indexOf(cleanSegment);
+    if (exactMatchIndex !== -1) {
+      return {
+        original: remainingText.slice(exactMatchIndex, exactMatchIndex + segmentText.trim().length),
+        startIndex: exactMatchIndex
+      };
+    }
+
+    // If no exact match, try more lenient matching
+    // This could be expanded with more sophisticated matching algorithms
+    for (let i = 0; i < cleanRemaining.length; i++) {
+      const substring = cleanRemaining.slice(i, i + cleanSegment.length);
+      const similarity = calculateSimilarity(cleanSegment, substring);
+      
+      if (similarity > 0.7) { // 70% similarity threshold
+        return {
+          original: remainingText.slice(i, i + segmentText.trim().length),
+          startIndex: i
+        };
+      }
+    }
+
+    return null;
+  };
+
+  // Calculate similarity between two strings
+  const calculateSimilarity = (str1: string, str2: string) => {
+    const longerLength = Math.max(str1.length, str2.length);
+    const editDistance = levenshteinDistance(str1, str2);
+    return (longerLength - editDistance) / longerLength;
+  };
+
+  // Levenshtein distance algorithm for string similarity
+  const levenshteinDistance = (str1: string, str2: string) => {
+    const matrix = [];
+
+    for (let i = 0; i <= str1.length; i++) {
+      matrix[i] = [i];
+    }
+
+    for (let j = 0; j <= str2.length; j++) {
+      matrix[0][j] = j;
+    }
+
+    for (let i = 1; i <= str1.length; i++) {
+      for (let j = 1; j <= str2.length; j++) {
+        if (str1.charAt(i - 1) === str2.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j] + 1
+          );
+        }
+      }
+    }
+
+    return matrix[str1.length][str2.length];
   };
 
   // Revert changes for a specific segment
@@ -105,19 +191,19 @@ export default function JsonToSrtCorrector() {
             type="file"
             accept=".json"
             onChange={handleJsonUpload}
-            className="file-input file-input-bordered w-full"
+            className="w-full p-2 border rounded"
           />
 
           <textarea
             value={originalText}
             onChange={(e) => setOriginalText(e.target.value)}
             placeholder="Paste original text here"
-            className="textarea textarea-bordered w-full h-64"
+            className="w-full h-64 p-2 border rounded"
           />
 
           <button
             onClick={processCorrections}
-            className="btn btn-primary w-full"
+            className="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
             Process Corrections
           </button>
@@ -133,21 +219,21 @@ export default function JsonToSrtCorrector() {
                 </span>
                 <button
                   onClick={() => revertSegment(segment.id)}
-                  className="btn btn-xs btn-error"
+                  className="bg-red-500 text-white px-2 py-1 rounded text-xs"
                 >
                   Revert
                 </button>
               </div>
 
-              <div className="diff">
-                <div className="diff-item">
-                  <div className="diff-header">Original</div>
+              <div className="space-y-2">
+                <div>
+                  <div className="text-sm font-semibold text-red-600">Original</div>
                   <div className="text-red-500">
                     {jsonData.segments[index]?.text}
                   </div>
                 </div>
-                <div className="diff-item">
-                  <div className="diff-header">Corrected</div>
+                <div>
+                  <div className="text-sm font-semibold text-green-600">Corrected</div>
                   <div className="text-green-500">{segment.text}</div>
                 </div>
               </div>
@@ -157,7 +243,7 @@ export default function JsonToSrtCorrector() {
           {correctedSegments.length > 0 && (
             <button
               onClick={downloadCorrectedSrt}
-              className="btn btn-success w-full mt-4"
+              className="w-full p-2 bg-green-500 text-white rounded hover:bg-green-600 mt-4"
             >
               Download Corrected SRT
             </button>
