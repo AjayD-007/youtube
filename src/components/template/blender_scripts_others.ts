@@ -26,8 +26,8 @@ def ease_out_expo(t):
     """Exponential easing for smooth fade."""
     return 1 - pow(2, -10 * t) if t > 0 else 0
 
-def create_text_strip(text: str, channel: int, frame_start: int, frame_end: int, font_size: int, location: tuple[float, float], font: str):
-    """Create a professional text strip with smooth fade animation and slight movement."""
+def create_text_strip(text: str, channel: int, frame_start: int, frame_end: int, font_size: int, location: tuple[float, float], font_path: str):
+    """Create a movie-quality text strip with advanced animations."""
     text_strip = bpy.context.scene.sequence_editor.sequences.new_effect(
         name=f"Text_{text}",
         type='TEXT',
@@ -35,48 +35,53 @@ def create_text_strip(text: str, channel: int, frame_start: int, frame_end: int,
         frame_start=frame_start,
         frame_end=frame_end
     )
-    
     text_strip.text = text
     text_strip.font_size = font_size
     text_strip.location = location
-    text_strip.blend_type = 'ALPHA_OVER'
-    text_strip.use_shadow = True  # Soft shadow for cinematic look
-    text_strip.shadow_color = (0, 0, 0, 0.5)
+    text_strip.color = (1, 1, 1, 1)  # White text
+    text_strip.use_bold = True  # Bold text for better visibility
+#    text_strip.use_shadow = True
+    text_strip.shadow_color = (0, 0, 0, 1)  # Black shadow
+    text_strip.shadow_offset = 1  # Shadow offset for depth
+    text_strip.use_outline = True
+    text_strip.outline_color = (0, 0, 0, 1)  # Black outline
+    text_strip.outline_width = 0.05  # Outline thickness
 
-    # Font handling
-    font_path = bpy.path.abspath("//fonts/")  # Adjust path as needed
-    if font == "Papyrus":
-        text_strip.font = font_path + "Papyrus.ttf"
-    elif font == "ArialBlack":
-        text_strip.font = font_path + "ArialBlack.ttf"
+    # Load custom font if provided
+    if font_path:
+        try:
+            text_strip.font = bpy.data.fonts.load(font_path)
+        except Exception as e:
+            print(f"Error loading font {font_path}: {e}")
 
-    # Fade in
+    # Fade-in animation
     text_strip.blend_alpha = 0.0
     text_strip.keyframe_insert("blend_alpha", frame=frame_start)
     text_strip.blend_alpha = 1.0
     text_strip.keyframe_insert("blend_alpha", frame=frame_start + 15)
 
-    # Subtle movement for cinematic effect
-    start_y = location[1]
-    end_y = location[1] + 0.02  # Slight upward movement
+    # Scale-up animation
+    text_strip.transform.scale_x = 0.8
+    text_strip.transform.scale_y = 0.8
+    text_strip.transform.keyframe_insert("scale_x", frame=frame_start)
+    text_strip.transform.keyframe_insert("scale_y", frame=frame_start)
+    text_strip.transform.scale_x = 1.0
+    text_strip.transform.scale_y = 1.0
+    text_strip.transform.keyframe_insert("scale_x", frame=frame_end - 35)
+    text_strip.transform.keyframe_insert("scale_y", frame=frame_end - 35)
 
-    text_strip.location = (location[0], start_y)
-    text_strip.keyframe_insert("location", frame=frame_start)
-
-    text_strip.location = (location[0], end_y)
-    text_strip.keyframe_insert("location", frame=frame_end - 20)
-
-    # Fade out
+    # Fade-out animation
     text_strip.blend_alpha = 1.0
     text_strip.keyframe_insert("blend_alpha", frame=frame_end - 15)
     text_strip.blend_alpha = 0.0
     text_strip.keyframe_insert("blend_alpha", frame=frame_end)
 
-    return text_strip
+HEADING_TEXT = "MANIMEKALAI"
+SUBHEADING_TEXT = "CHAPTER 5"
 
-# Text Definitions
-HEADING_TEXT = ${JSON.stringify(heading)}
-SUBHEADING_TEXT = ${JSON.stringify(subheading)}
+# Font paths
+PAPYRUS_FONT_PATH = "C:/Windows/Fonts/PAPYRUS.TTF"
+ARIAL_BLACK_FONT_PATH = "C:/Windows/Fonts/ARBLI___.TTF"
 `;
 
 export const INTRO_OUTRO_FUNCTIONS = (introVideoPath: string,data:ImageTiming[]) => `
