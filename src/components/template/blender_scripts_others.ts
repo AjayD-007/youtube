@@ -22,8 +22,8 @@ def add_video_strip(filepath: str, channel: int, frame_start: int):
 `;
 
 export const TEXT_TEMPLATES = (heading: string, subheading: string) => `
-def create_text_strip(text: str, channel: int, frame_start: int, frame_end: int, font_size: int, location: tuple[float, float]):
-    """Create a text strip with fade animation."""
+def create_cinematic_text(text: str, channel: int, frame_start: int, frame_end: int, font_size: int, location: tuple[float, float], style='heading'):
+    """Create text with cinematic-style animations based on text type."""
     text_strip = bpy.context.scene.sequence_editor.sequences.new_effect(
         name=f"Text_{text}",
         type='TEXT',
@@ -34,23 +34,80 @@ def create_text_strip(text: str, channel: int, frame_start: int, frame_end: int,
     text_strip.text = text
     text_strip.font_size = font_size
     text_strip.location = location
-    
-    # Fade animation
     text_strip.blend_type = 'ALPHA_OVER'
     
-    # Fade in
-    text_strip.keyframe_insert("blend_alpha", frame=frame_start)
-    text_strip.blend_alpha = 0.0
-    text_strip.keyframe_insert("blend_alpha", frame=frame_start + 10)
-    text_strip.blend_alpha = 1.0
+    # Set appropriate font
+    if style == 'heading':
+        text_strip.font = bpy.data.fonts.load("C:\\Windows\\Fonts\\PAPYRUS.TTF")
+    else:  # subheading
+        text_strip.font = bpy.data.fonts.load("C:\\Windows\\Fonts\\ariblk.ttf")
     
-    # Fade out
-    text_strip.keyframe_insert("blend_alpha", frame=frame_end - 10)
-    text_strip.blend_alpha = 1.0
-    text_strip.keyframe_insert("blend_alpha", frame=frame_end)
-    text_strip.blend_alpha = 0.0
+    def add_keyframe_with_easing(strip, data_path, frame, value, interpolation='BEZIER', easing='EASE_OUT'):
+        strip.keyframe_insert(data_path=data_path, frame=frame)
+        keyframe = strip.animation_data.action.fcurves.find(data_path).keyframe_points[-1]
+        keyframe.interpolation = interpolation
+        keyframe.easing = easing
+    
+    # Animation timing
+    intro_duration = 25  # Frames for intro animation
+    hold_duration = frame_end - frame_start - 50  # Main display duration
+    outro_duration = 25  # Frames for outro animation
+    
+    if style == 'heading':
+        # Heading animation: Fade in while scaling up from center
+        # Similar to Marvel/Star Wars style title reveals
+        
+        # Initial state (small and transparent)
+        text_strip.blend_alpha = 0.0
+        text_strip.scale_start_x = 0.4
+        text_strip.scale_start_y = 0.4
+        
+        # Fade in
+        add_keyframe_with_easing(text_strip, "blend_alpha", frame_start, 0.0)
+        add_keyframe_with_easing(text_strip, "blend_alpha", frame_start + intro_duration, 1.0)
+        
+        # Scale up with slight overshoot
+        add_keyframe_with_easing(text_strip, "scale_start_x", frame_start, 0.4)
+        add_keyframe_with_easing(text_strip, "scale_start_y", frame_start, 0.4)
+        add_keyframe_with_easing(text_strip, "scale_start_x", frame_start + intro_duration, 1.05)
+        add_keyframe_with_easing(text_strip, "scale_start_y", frame_start + intro_duration, 1.05)
+        add_keyframe_with_easing(text_strip, "scale_start_x", frame_start + intro_duration + 5, 1.0)
+        add_keyframe_with_easing(text_strip, "scale_start_y", frame_start + intro_duration + 5, 1.0)
+        
+        # Fade out with scale
+        add_keyframe_with_easing(text_strip, "blend_alpha", frame_end - outro_duration, 1.0)
+        add_keyframe_with_easing(text_strip, "blend_alpha", frame_end, 0.0)
+        add_keyframe_with_easing(text_strip, "scale_start_x", frame_end - outro_duration, 1.0)
+        add_keyframe_with_easing(text_strip, "scale_start_y", frame_end - outro_duration, 1.0)
+        add_keyframe_with_easing(text_strip, "scale_start_x", frame_end, 1.2)
+        add_keyframe_with_easing(text_strip, "scale_start_y", frame_end, 1.2)
+        
+    else:
+        # Subheading animation: Slide in from bottom with fade
+        # Similar to traditional movie subtitle/credit style
+        
+        # Initial state (below screen and transparent)
+        text_strip.blend_alpha = 0.0
+        text_strip.translate_start_y = -0.3
+        
+        # Fade in while sliding up
+        add_keyframe_with_easing(text_strip, "blend_alpha", frame_start, 0.0)
+        add_keyframe_with_easing(text_strip, "blend_alpha", frame_start + intro_duration, 1.0)
+        add_keyframe_with_easing(text_strip, "translate_start_y", frame_start, -0.3)
+        add_keyframe_with_easing(text_strip, "translate_start_y", frame_start + intro_duration, 0.0)
+        
+        # Fade out while sliding up
+        add_keyframe_with_easing(text_strip, "blend_alpha", frame_end - outro_duration, 1.0)
+        add_keyframe_with_easing(text_strip, "blend_alpha", frame_end, 0.0)
+        add_keyframe_with_easing(text_strip, "translate_start_y", frame_end - outro_duration, 0.0)
+        add_keyframe_with_easing(text_strip, "translate_start_y", frame_end, 0.2)
     
     return text_strip
+
+def create_text_strip(text: str, channel: int, frame_start: int, frame_end: int, font_size: int, location: tuple[float, float]):
+    """Wrapper function to maintain compatibility with existing code."""
+    style = 'heading' if font_size > 100 else 'subheading'
+    return create_cinematic_text(text, channel, frame_start, frame_end, font_size, location, style)
 
 HEADING_TEXT = ${JSON.stringify(heading)}
 SUBHEADING_TEXT = ${JSON.stringify(subheading)}
