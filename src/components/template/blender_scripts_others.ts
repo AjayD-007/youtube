@@ -75,13 +75,6 @@ def create_text_strip(text: str, channel: int, frame_start: int, frame_end: int,
     text_strip.keyframe_insert("blend_alpha", frame=frame_end - 15)
     text_strip.blend_alpha = 0.0
     text_strip.keyframe_insert("blend_alpha", frame=frame_end)
-
-HEADING_TEXT = "MANIMEKALAI"
-SUBHEADING_TEXT = "CHAPTER 5"
-
-# Font paths
-PAPYRUS_FONT_PATH = "C:/Windows/Fonts/PAPYRUS.TTF"
-ARIAL_BLACK_FONT_PATH = "C:/Windows/Fonts/ARBLI___.TTF"
 `;
 
 export const INTRO_OUTRO_FUNCTIONS = (introVideoPath: string,data:ImageTiming[]) => `
