@@ -23,7 +23,16 @@ const BlenderScriptGenerator: React.FC<Props> = ({
   imageFolder = "C:/path/to/images/",
 }) => {
   const [copied, setCopied] = React.useState(false);
-
+  function normalizePath(path: string): string {
+    // Replace all backslashes with forward slashes
+    let normalized = path.replace(/\\/g, "/");
+    // Ensure it ends with a forward slash
+    if (!normalized.endsWith("/")) {
+      normalized += "/";
+    }
+  
+    return normalized;
+  }
   const generateBlenderScript = useCallback(() => {
     if (!data || data.length === 0) return "";
 
@@ -31,17 +40,18 @@ const BlenderScriptGenerator: React.FC<Props> = ({
     const endFrame = data[data.length - 1]?.stop || 0;
     const totalFrames = endFrame - startFrame;
     const someData = data.map((ele:ImageTiming,index:number)=>({start:ele.start,stop:ele.stop,prompt:"",image_number:(index+1)}))
+    const correctedImageFolder = normalizePath(imageFolder);
     return [
       BASE_IMPORTS,
       CLEAR_SEQUENCER,
       TIMELINE_SETUP(fps, startFrame, totalFrames),
       AUDIO_FUNCTIONS,
-      TEXT_TEMPLATES("MANIMEKALAI", "CHAPTER 2 - PART 2"),
+      TEXT_TEMPLATES("MANIMEKALAI", "CHAPTER 12"),
       TRANSFORM_EFFECT,
       INTRO_OUTRO_FUNCTIONS(
         "C:/Users/ASUS/OneDrive/Documents/youtube/downloads/intro.mp4",data
       ),
-      MAIN_FUNCTION(someData, imageFolder),
+      MAIN_FUNCTION(someData, correctedImageFolder),
     ].join("\n\n");
   }, [data, fps, imageFolder]);
 

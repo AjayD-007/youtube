@@ -31,7 +31,7 @@ def setup_timeline():
 
 export const TRANSFORM_EFFECT = `
 def add_transform_effect(strip, start_frame, end_frame, channel):
-    """Add random Ken Burns style transform effect to an image strip."""
+    """Add enhanced Ken Burns style transform effect to an image strip."""
     transform = bpy.context.scene.sequence_editor.sequences.new_effect(
         name=f"Transform_{strip.name}",
         type='TRANSFORM',
@@ -41,33 +41,50 @@ def add_transform_effect(strip, start_frame, end_frame, channel):
         seq1=strip
     )
 
-    # Random starting and ending positions/scales for Ken Burns effect
-    scale_start = random.uniform(1.2, 1.6)
-    scale_end = random.uniform(1.0, 1.6)
-    pos_start_x = random.uniform(-0.3, 0.3)
-    pos_start_y = random.uniform(-0.3, 0.3)
-    pos_end_x = random.uniform(-0.2, 0.2)
-    pos_end_y = random.uniform(-0.2, 0.2)
+    # Enhanced random parameters for more dynamic movement
+    scale_start = random.uniform(1.3, 1.8)  # Increased zoom range
+    scale_end = random.uniform(1.1, 1.4)    # Ensure we don't zoom out too much
+    
+    # Increased movement range for more noticeable panning
+    pos_start_x = random.uniform(-0.6, 0.6)
+    pos_start_y = random.uniform(-0.6, 0.6)
+    pos_end_x = random.uniform(-0.6, 0.6)
+    pos_end_y = random.uniform(-0.6, 0.6)
 
-    # Set initial keyframes
+    # Ensure minimum movement distance for more dynamic feel
+    min_movement = 0.3
+    while abs(pos_end_x - pos_start_x) < min_movement and abs(pos_end_y - pos_start_y) < min_movement:
+        pos_end_x = random.uniform(-0.6, 0.6)
+        pos_end_y = random.uniform(-0.6, 0.6)
+
+    # Set initial transform properties
+    bpy.context.scene.frame_set(start_frame)
     transform.scale_start_x = scale_start
     transform.scale_start_y = scale_start
     transform.translate_start_x = pos_start_x
     transform.translate_start_y = pos_start_y
+    
+    # Insert initial keyframes
     transform.keyframe_insert(data_path='scale_start_x', frame=start_frame)
     transform.keyframe_insert(data_path='scale_start_y', frame=start_frame)
     transform.keyframe_insert(data_path='translate_start_x', frame=start_frame)
     transform.keyframe_insert(data_path='translate_start_y', frame=start_frame)
 
-    # Set ending keyframes
+    # Set ending transform properties
+    bpy.context.scene.frame_set(end_frame)
     transform.scale_start_x = scale_end
     transform.scale_start_y = scale_end
     transform.translate_start_x = pos_end_x
     transform.translate_start_y = pos_end_y
+    
+    # Insert ending keyframes
     transform.keyframe_insert(data_path='scale_start_x', frame=end_frame)
     transform.keyframe_insert(data_path='scale_start_y', frame=end_frame)
     transform.keyframe_insert(data_path='translate_start_x', frame=end_frame)
     transform.keyframe_insert(data_path='translate_start_y', frame=end_frame)
+
+    # Set interpolation type
+    transform.interpolation = 'BEZIER'
 
     return transform
 `;
@@ -87,37 +104,49 @@ def main():
     # Add audio elements
     add_audio_strip("C:/Users/ASUS/OneDrive/Documents/youtube/whisper-transcription/story.wav", 1, 1)  # Channel 1
     add_audio_strip("C:/Users/ASUS/OneDrive/Documents/youtube/downloads/music.mp3", 8, 1)  # Channel 8
+
     HEADING_TEXT = "MANIMEKALAI"
     SUBHEADING_TEXT = "CHAPTER 5"
 
     # Font paths
     PAPYRUS_FONT_PATH = "C:/Windows/Fonts/PAPYRUS.TTF"
     ARIAL_BLACK_FONT_PATH = "C:/Windows/Fonts/ARBLI___.TTF"
-    # Add text elements
-    create_text_strip(
+    # Image processing
+    image_folder = "${imageFolder.replace(/\\/g, '\\\\')}"
+    image_timings = ${JSON.stringify(data, null, 2).replace(/"/g, "'")}
+    # Add text elements with proper timing
+    heading_text, heading_transform = create_text_strip(
         text=HEADING_TEXT,
         channel=4,
         frame_start=1,
-        frame_end=${data[0]?.start + 10 || 30},  # Overlap first image
+        frame_end=image_timings[0]['start'] + 10,
         font_size=158,
-        location=(0.5, 0.7),font_path=PAPYRUS_FONT_PATH
+        location=(0.5, 0.7),
+        font_path=PAPYRUS_FONT_PATH,
+        fade_in_duration=15,
+        fade_out_duration=10,
+        scale_animation_duration=25
     )
     
-    create_text_strip(
+    subheading_text, subheading_transform = create_text_strip(
         text=SUBHEADING_TEXT,
         channel=6,
         frame_start=1,
-        frame_end=${data[0]?.start + 15 || 35},
+        frame_end=image_timings[0]['start'] + 15,
         font_size=80,
-        location=(0.5, 0.6),font_path=ARIAL_BLACK_FONT_PATH
+        location=(0.5, 0.6),
+        font_path=ARIAL_BLACK_FONT_PATH,
+        fade_in_duration=20,
+        fade_out_duration=15,
+        scale_animation_duration=30,
+        initial_scale=0.7,
+        final_scale=1.1
     )
     
     # Add intro/outro videos
     add_intro_outro()
     
-    # Original image processing
-    image_folder = "${imageFolder.replace(/\\/g, '\\\\')}"
-    image_timings = ${JSON.stringify(data, null, 2).replace(/"/g, "'")}
+    
 
     for i, timing in enumerate(image_timings):
         base_channel = 3 if i % 2 == 0 else 4
@@ -138,5 +167,4 @@ def main():
             print(f"Error processing {image_name}: {str(e)}")
 
 if __name__ == "__main__":
-    main()
-`;
+    main()`;
